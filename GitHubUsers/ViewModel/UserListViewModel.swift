@@ -19,7 +19,7 @@ class UserListViewModel: ObservableObject {
 
     func loadUsers() async {
         do {
-            users = try await apiClient.fetchUsers()
+            users = try await apiClient.users()
         } catch {
             print(error)
         }
