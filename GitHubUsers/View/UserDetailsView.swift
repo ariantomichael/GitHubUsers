@@ -58,6 +58,12 @@ struct UserDetailsView: View {
                 }
             }
         }
+        .refreshable {
+            Task {
+                await viewModel.loadUserDetails(userId: id)
+                await viewModel.loadNextPageOfRepositories()
+            }
+        }
         .sheet(isPresented: $isWebViewPresented) {
             NavigationView {
                 if let webViewUrlString = viewModel.webViewUrlString,

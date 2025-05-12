@@ -24,6 +24,7 @@ class UserDetailsViewModel: ObservableObject {
     func loadUserDetails(userId: Int) async {
         do {
             userDetails = try await apiClient.userDetails(userId: userId)
+            repositories.removeAll()
             nextPageUrl = userDetails.reposUrl
         } catch {
             print(error)

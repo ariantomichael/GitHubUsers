@@ -30,6 +30,10 @@ struct UserListView: View {
                         }
                     }
                 }
+            }.refreshable {
+                Task {
+                    await viewModel.loadUsers()
+                }
             }
         } detail: {
             Text("Select a user")
