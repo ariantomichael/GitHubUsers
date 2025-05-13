@@ -105,8 +105,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CC34B0C92DCCA40100CDB613 /* Build configuration list for PBXNativeTarget "GitHubUsers" */;
 			buildPhases = (
-				CC3C07182DCF964000A7B601 /* Run swift-format */,
 				CC34B0A22DCCA3FF00CDB613 /* Sources */,
+				CC3C07182DCF964000A7B601 /* Run swift-format */,
 				CC34B0A32DCCA3FF00CDB613 /* Frameworks */,
 				CC34B0A42DCCA3FF00CDB613 /* Resources */,
 			);
