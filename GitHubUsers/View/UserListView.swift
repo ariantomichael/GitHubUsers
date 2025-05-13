@@ -9,9 +9,40 @@ import SwiftUI
 
 struct UserListView: View {
     @StateObject private var viewModel = UserListViewModel()
+    @State private var isFirstLoading = true
 
     var body: some View {
         NavigationSplitView {
+            if isFirstLoading {
+                ProgressView()
+                    .scaleEffect(1.5)
+            } else {
+                userList
+                    .refreshable {
+                        Task {
+                            await viewModel.loadUsers()
+                        }
+                    }
+            }
+        } detail: {
+            Text("Select a user")
+        }
+        .onAppear {
+            Task {
+                await viewModel.loadUsers()
+                isFirstLoading = false
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var userList: some View {
+        if viewModel.users.isEmpty {
+            ScrollView {  // wrap with ScrollView to make it refreshable
+                Text("No users found")
+                    .padding(.top, 120)
+            }
+        } else {
             List {
                 ForEach(viewModel.users) { user in
                     NavigationLink {
@@ -30,17 +61,6 @@ struct UserListView: View {
                         }
                     }
                 }
-            }.refreshable {
-                Task {
-                    await viewModel.loadUsers()
-                }
-            }
-        } detail: {
-            Text("Select a user")
-        }
-        .onAppear {
-            Task {
-                await viewModel.loadUsers()
             }
         }
     }
