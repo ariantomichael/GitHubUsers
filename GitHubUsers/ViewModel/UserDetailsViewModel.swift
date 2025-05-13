@@ -15,9 +15,9 @@ class UserDetailsViewModel: ObservableObject {
     @Published private(set) var nextPageUrl: String?
     var webViewUrlString: String?
 
-    let apiClient: APIClient
+    let apiClient: UserDetailsAPIClientProtocol
 
-    init(apiClient: APIClient = APIClient()) {
+    init(apiClient: UserDetailsAPIClientProtocol = UserDetailsAPIClient()) {
         self.apiClient = apiClient
     }
 

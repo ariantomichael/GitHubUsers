@@ -11,9 +11,9 @@ import Foundation
 class UserListViewModel: ObservableObject {
 
     @Published private(set) var users: [User] = []
-    let apiClient: APIClient
+    let apiClient: UserListAPIClientProtocol
 
-    init(apiClient: APIClient = APIClient()) {
+    init(apiClient: UserListAPIClientProtocol = UserListAPIClient()) {
         self.apiClient = apiClient
     }
 
