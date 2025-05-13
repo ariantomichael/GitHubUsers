@@ -18,6 +18,7 @@ struct UserListView: View {
                     .scaleEffect(1.5)
             } else {
                 userList
+                    .navigationTitle(Text("GitHub Users"))
                     .refreshable {
                         Task {
                             await viewModel.loadUsers()
