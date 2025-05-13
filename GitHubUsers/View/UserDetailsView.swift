@@ -17,11 +17,13 @@ struct UserDetailsView: View {
             LazyVStack {
                 avatar
                 userDetails
+                Spacer().frame(height: 12)
                 repositories
                 if viewModel.nextPageUrl != nil {
                     ProgressView()
                 }
             }
+            .padding(.horizontal, 16)
         }
         .refreshable {
             Task {
@@ -47,6 +49,8 @@ struct UserDetailsView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(height: 240)
+                .clipShape(Circle())
+                .overlay(Circle().strokeBorder(Color.gray))
         } placeholder: {
             ProgressView()
         }
@@ -55,11 +59,17 @@ struct UserDetailsView: View {
     @ViewBuilder
     private var userDetails: some View {
         Text(viewModel.userDetails.login)
+            .font(.title)
+            .fontWeight(.bold)
         if let name = viewModel.userDetails.name {
             Text(name)
         }
-        Text("Followers: \(viewModel.userDetails.followers)")
-        Text("Following: \(viewModel.userDetails.following)")
+        Spacer().frame(height: 4)
+        Text(
+            "\(viewModel.userDetails.followers) followers · \(viewModel.userDetails.following) following"
+        )
+        .font(.subheadline)
+        .foregroundColor(.secondary)
     }
 
     @ViewBuilder
@@ -69,15 +79,33 @@ struct UserDetailsView: View {
                 viewModel.webViewUrlString = repository.htmlUrl
                 isWebViewPresented = true
             } label: {
-                VStack {
-                    Text(repository.name)
+                VStack(alignment: .leading) {
+                    HStack {
+                        VStack {
+                            Text(repository.name)
+                                .font(.headline)
+                                .fontWeight(.bold)
+                        }
+                        Spacer()
+                        Text(
+                            "\(repository.stargazersCount) \(Image(systemName: "star.fill").renderingMode(.template))"
+                        )
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    }
                     if let language = repository.language {
                         Text(language)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                    Text("Star: \(repository.stargazersCount)")
                     if let description = repository.description {
                         Text(description)
+                            .foregroundColor(.primary)
+                            .lineLimit(3)
+                            .truncationMode(.tail)
+                            .multilineTextAlignment(.leading)
                     }
+                    Divider()
                 }
             }
             .onAppear {
