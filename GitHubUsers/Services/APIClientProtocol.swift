@@ -12,7 +12,7 @@ protocol BaseAPIClientProtocol {}
 extension BaseAPIClientProtocol {
     private var token: String {
         return
-            "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"
+            "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"
     }
 
     var apiBaseEndPoint: String {
