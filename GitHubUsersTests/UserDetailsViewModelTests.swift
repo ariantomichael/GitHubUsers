@@ -65,6 +65,31 @@ struct UserDetailsViewModelTests {
         await #expect(viewModel.repositories[1].stargazersCount == 300)
         await #expect(
             viewModel.nextPageUrl == "https://api.github.com/repositories/1300192/issues?page=4")
+
+        // add 1 more repo, no next page link
+        mockApiClient.userRepositoriesAndLink = (
+            [
+                Repository(
+                    id: 333, name: "GitHubUsers333", description: nil, fork: false, language: nil,
+                    stargazersCount: 100, htmlUrl: "")
+            ],
+            ""
+        )
+        await viewModel.loadNextPageOfRepositories()
+        await #expect(viewModel.nextPageUrl == nil)
+        await #expect(viewModel.repositories.count == 3)
+
+        mockApiClient.userRepositoriesAndLink = (
+            [
+                Repository(
+                    id: 345, name: "GitHubUsers345", description: nil, fork: false, language: nil,
+                    stargazersCount: 100, htmlUrl: "")
+            ],
+            ""
+        )
+        await viewModel.loadNextPageOfRepositories()  // will do nothing, due nextPageUrl nil
+        await #expect(viewModel.nextPageUrl == nil)
+        await #expect(viewModel.repositories.count == 3)
     }
 
     @Test func testShouldNotPopulateForkedRepo() async throws {
@@ -141,6 +166,11 @@ struct UserDetailsViewModelTests {
         await viewModel.loadNextPageOfRepositories()
 
         await #expect(viewModel.nextPageUrl == "anystring", "takes any string inside < >")
-    }
 
+        mockApiClient.userRepositoriesAndLink = ([], nil)
+        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        await viewModel.loadNextPageOfRepositories()
+
+        await #expect(viewModel.nextPageUrl == nil)
+    }
 }
