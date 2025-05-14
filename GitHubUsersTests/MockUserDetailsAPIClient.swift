@@ -16,7 +16,8 @@ class MockUserDetailsAPIClient: UserDetailsAPIClientProtocol {
         if let error {
             throw error
         }
-        return userDetails!  // it is okay to crash if nil just to let dev know that they forgot to set the mock UserDetails
+        // it is okay to crash if nil just to let dev know that they forgot to set the mock UserDetails
+        return userDetails!
     }
 
     func userRepositoriesAndLink(urlString: String) async throws -> ([Repository], String?) {
