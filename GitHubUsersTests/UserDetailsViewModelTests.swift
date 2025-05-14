@@ -5,6 +5,7 @@
 //  Created by Michael Arianto on 2025/05/08.
 //
 
+import Foundation
 import Testing
 
 @testable import GitHubUsers
@@ -21,7 +22,7 @@ struct UserDetailsViewModelTests {
         mockApiClient.userDetails = UserDetails(
             login: "mike", avatarUrl: "http://google.com", name: "Michael Arianto", followers: 10,
             following: 15, reposUrl: "http://github.com/mike")
-        await viewModel.loadUserDetails(userId: 1)
+        try await viewModel.loadUserDetails(userId: 1)
 
         await #expect(viewModel.userDetails.login == "mike")
         await #expect(viewModel.userDetails.reposUrl == "http://github.com/mike")
@@ -53,8 +54,8 @@ struct UserDetailsViewModelTests {
         mockApiClient.userDetails = UserDetails(
             login: "mike", avatarUrl: "http://google.com", name: "Michael Arianto", followers: 10,
             following: 15, reposUrl: "http://github.com/mike")
-        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        try await viewModel.loadNextPageOfRepositories()
 
         await #expect(viewModel.repositories.count == 2, "Not forked only")
         await #expect(viewModel.repositories[0].name == "GitHubUsers2")
@@ -75,7 +76,7 @@ struct UserDetailsViewModelTests {
             ],
             ""
         )
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadNextPageOfRepositories()
         await #expect(viewModel.nextPageUrl == nil)
         await #expect(viewModel.repositories.count == 3)
 
@@ -87,7 +88,7 @@ struct UserDetailsViewModelTests {
             ],
             ""
         )
-        await viewModel.loadNextPageOfRepositories()  // will do nothing, due nextPageUrl nil
+        try await viewModel.loadNextPageOfRepositories()  // will do nothing, due nextPageUrl nil
         await #expect(viewModel.nextPageUrl == nil)
         await #expect(viewModel.repositories.count == 3)
     }
@@ -112,8 +113,8 @@ struct UserDetailsViewModelTests {
         mockApiClient.userDetails = UserDetails(
             login: "mike", avatarUrl: "http://google.com", name: "Michael Arianto", followers: 10,
             following: 15, reposUrl: "http://github.com/mike")
-        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        try await viewModel.loadNextPageOfRepositories()
 
         await #expect(viewModel.repositories.isEmpty, "All repo forked")
         await #expect(viewModel.nextPageUrl == nil)
@@ -130,8 +131,8 @@ struct UserDetailsViewModelTests {
         mockApiClient.userDetails = UserDetails(
             login: "mike", avatarUrl: "http://google.com", name: "Michael Arianto", followers: 10,
             following: 15, reposUrl: "http://github.com/mike")
-        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        try await viewModel.loadNextPageOfRepositories()
 
         await #expect(
             viewModel.nextPageUrl == "https://api.github.com/repositories/1300192/issues?page=4")
@@ -140,37 +141,67 @@ struct UserDetailsViewModelTests {
             [],
             "<https://api.github.com/repositories/1300192/issues?page=2>; rel=\"prev\", <https://api.github.com/repositories/1300192/issues?page=515>; rel=\"last\", <https://api.github.com/repositories/1300192/issues?page=1>; rel=\"first\""
         )
-        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        try await viewModel.loadNextPageOfRepositories()
 
         await #expect(viewModel.nextPageUrl == nil)
 
         mockApiClient.userRepositoriesAndLink = (
             [], "<https://api.github.com/repositories/1300192/issues?page=2; rel=\"next\""
         )
-        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        try await viewModel.loadNextPageOfRepositories()
 
         await #expect(viewModel.nextPageUrl == nil, "wrong format, no > character")
 
         mockApiClient.userRepositoriesAndLink = (
             [], "<https://api.github.com/repositories/1300192/issues?page=2;rel=\"next\""
         )
-        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        try await viewModel.loadNextPageOfRepositories()
 
         await #expect(viewModel.nextPageUrl == nil, "wrong format, no space before rel keyword")
 
         mockApiClient.userRepositoriesAndLink = ([], "<anystring>; rel=\"next\"")
-        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        try await viewModel.loadNextPageOfRepositories()
 
         await #expect(viewModel.nextPageUrl == "anystring", "takes any string inside < >")
 
         mockApiClient.userRepositoriesAndLink = ([], nil)
-        await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
-        await viewModel.loadNextPageOfRepositories()
+        try await viewModel.loadUserDetails(userId: 1)  // to get the repos URL
+        try await viewModel.loadNextPageOfRepositories()
 
         await #expect(viewModel.nextPageUrl == nil)
+    }
+
+    @Test func testErrorLoadUserDetails() async throws {
+        let mockApiClient = MockUserDetailsAPIClient()
+        let viewModel = await UserDetailsViewModel(apiClient: mockApiClient)
+
+        mockApiClient.error = URLError(.badServerResponse)
+
+        let error = await #expect(throws: URLError.self) {
+            try await viewModel.loadUserDetails(userId: 2)
+        }
+        #expect(error?.code == URLError.badServerResponse)
+    }
+
+    @Test func testErrorLoadUserRepos() async throws {
+        let mockApiClient = MockUserDetailsAPIClient()
+        let viewModel = await UserDetailsViewModel(apiClient: mockApiClient)
+
+        mockApiClient.userDetails = UserDetails(
+            login: "", avatarUrl: "", name: nil, followers: 1, following: 1,
+            reposUrl: "https://api.github.com/users/2/repos")
+
+        try await viewModel.loadUserDetails(userId: 2)  // to get the repos URL
+
+        mockApiClient.error = URLError(.badServerResponse)
+
+        let error = await #expect(throws: URLError.self) {
+            try await viewModel.loadNextPageOfRepositories()
+        }
+        #expect(error?.code == URLError.badServerResponse)
     }
 }
