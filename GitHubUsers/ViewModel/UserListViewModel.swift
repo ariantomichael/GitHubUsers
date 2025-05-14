@@ -17,11 +17,7 @@ class UserListViewModel: ObservableObject {
         self.apiClient = apiClient
     }
 
-    func loadUsers() async {
-        do {
-            users = try await apiClient.users()
-        } catch {
-            print(error)
-        }
+    func loadUsers() async throws {
+        users = try await apiClient.users()
     }
 }

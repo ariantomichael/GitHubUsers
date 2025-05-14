@@ -10,6 +10,7 @@ import SwiftUI
 struct UserListView: View {
     @StateObject private var viewModel = UserListViewModel()
     @State private var isFirstLoading = true
+    @State private var errorMessage: String?
 
     var body: some View {
         NavigationSplitView {
@@ -21,16 +22,29 @@ struct UserListView: View {
                     .navigationTitle(Text("GitHub Users"))
                     .refreshable {
                         Task {
-                            await viewModel.loadUsers()
+                            do {
+                                try await viewModel.loadUsers()
+                            } catch {
+                                errorMessage = error.localizedDescription
+                            }
                         }
                     }
+            }
+            if errorMessage != nil {
+                ToastView(message: $errorMessage)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
             }
         } detail: {
             Text("Select a user")
         }
         .onAppear {
             Task {
-                await viewModel.loadUsers()
+                do {
+                    try await viewModel.loadUsers()
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
                 isFirstLoading = false
             }
         }

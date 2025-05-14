@@ -21,25 +21,17 @@ class UserDetailsViewModel: ObservableObject {
         self.apiClient = apiClient
     }
 
-    func loadUserDetails(userId: Int) async {
-        do {
-            userDetails = try await apiClient.userDetails(userId: userId)
-            repositories.removeAll()
-            nextPageUrl = userDetails.reposUrl
-        } catch {
-            print(error)
-        }
+    func loadUserDetails(userId: Int) async throws {
+        userDetails = try await apiClient.userDetails(userId: userId)
+        repositories.removeAll()
+        nextPageUrl = userDetails.reposUrl
     }
 
-    func loadNextPageOfRepositories() async {
+    func loadNextPageOfRepositories() async throws {
         guard let nextPageUrl else { return }
-        do {
-            let res = try await apiClient.userRepositoriesAndLink(urlString: nextPageUrl)
-            repositories.append(contentsOf: res.0.filter { $0.fork == false })
-            self.nextPageUrl = extractNextURL(from: res.1)
-        } catch {
-            print(error)
-        }
+        let res = try await apiClient.userRepositoriesAndLink(urlString: nextPageUrl)
+        repositories.append(contentsOf: res.0.filter { $0.fork == false })
+        self.nextPageUrl = extractNextURL(from: res.1)
     }
 
     private func extractNextURL(from linkHeader: String?) -> String? {

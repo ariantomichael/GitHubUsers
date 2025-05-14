@@ -10,7 +10,9 @@ import SwiftUI
 struct UserDetailsView: View {
     let id: Int
     @StateObject private var viewModel = UserDetailsViewModel()
-    @State private var isWebViewPresented: Bool = false
+    @State private var isWebViewPresented = false
+    @State private var errorMessage: String?
+    @State private var isLoadingRepositories = false
 
     var body: some View {
         ScrollView {
@@ -19,26 +21,43 @@ struct UserDetailsView: View {
                 userDetails
                 Spacer().frame(height: 12)
                 repositories
-                if viewModel.nextPageUrl != nil {
+                if isLoadingRepositories {
                     ProgressView()
                 }
             }
             .padding(.horizontal, 16)
         }
         .refreshable {
+            isLoadingRepositories = true
             Task {
-                await viewModel.loadUserDetails(userId: id)
-                await viewModel.loadNextPageOfRepositories()
+                do {
+                    try await viewModel.loadUserDetails(userId: id)
+                    try await viewModel.loadNextPageOfRepositories()
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+                isLoadingRepositories = false
             }
         }
         .sheet(isPresented: $isWebViewPresented) {
             webViewModal
         }
         .onAppear {
+            isLoadingRepositories = true
             Task {
-                await viewModel.loadUserDetails(userId: id)
-                await viewModel.loadNextPageOfRepositories()
+                do {
+                    try await viewModel.loadUserDetails(userId: id)
+                    try await viewModel.loadNextPageOfRepositories()
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+                isLoadingRepositories = false
             }
+        }
+        if errorMessage != nil {
+            ToastView(message: $errorMessage)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
         }
     }
 
@@ -110,8 +129,14 @@ struct UserDetailsView: View {
             }
             .onAppear {
                 if repository.id == viewModel.repositories.last?.id {
+                    isLoadingRepositories = true
                     Task {
-                        await viewModel.loadNextPageOfRepositories()
+                        do {
+                            try await viewModel.loadNextPageOfRepositories()
+                        } catch {
+                            errorMessage = error.localizedDescription
+                        }
+                        isLoadingRepositories = false
                     }
                 }
             }
