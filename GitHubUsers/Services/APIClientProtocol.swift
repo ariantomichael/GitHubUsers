@@ -10,9 +10,9 @@ import Foundation
 protocol BaseAPIClientProtocol {}
 
 extension BaseAPIClientProtocol {
-    private var token: String {
-        return
-            "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"
+    private var token: String? {
+        // input your own GitHub app token
+        return nil
     }
 
     var apiBaseEndPoint: String {
@@ -28,7 +28,9 @@ extension BaseAPIClientProtocol {
     func gitHubRequest(urlString: String) -> URLRequest? {
         guard let url = URL(string: urlString) else { return nil }
         var request = URLRequest(url: url)
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if let token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         request.setValue(
             "2022-11-28",
             forHTTPHeaderField: "X-GitHub-Api-Version"
